@@ -1,26 +1,23 @@
 <template>
-  <section class="game">
-    <section class="game__field">
+  <section class="game-field">
+    <section class="game-field__cards">
       <Card
-        class="game__card"
+        class="game-field__card"
         v-for="i in cardsQty"
         :key="i"
         :icon="getNextIconName(i - 1)"
+        @click="cardClicked($event)"
       />
     </section>
-    <section class="game__progress-section">
-      <Progress class="game__progress" />
-    </section>
+    <slot />
   </section>
 </template>
 
 <script>
 import Card from "@/components/Card";
-import Progress from "@/components/Progress";
 export default {
   components: {
     Card,
-    Progress,
   },
   name: "Field",
   props: {
@@ -35,6 +32,7 @@ export default {
   },
   data() {
     return {
+      clickedCard: "",
       randomIndexArr: Array.apply(null, Array(this.cardsQty))
         .map((e, i) => i)
         .sort(() => Math.random() - 0.5),
@@ -60,50 +58,54 @@ export default {
       ],
     };
   },
+  computed: {
+    getIcons() {
+      let iconsQty = this.cardsQty / 2;
+      return this.icons.length !== iconsQty
+        ? this.icons.slice(0, iconsQty)
+        : this.icons;
+    },
+  },
   methods: {
+    cardClicked(cardName) {
+      if (this.clickedCard === "") {
+        this.clickedCard = cardName;
+      }
+    },
     getNextIconName(i) {
+      let iconsLength = this.getIcons.length;
       let indexInIcons =
-        this.randomIndexArr[i] > this.icons.length - 1
-          ? this.randomIndexArr[i] - this.icons.length
+        this.randomIndexArr[i] > iconsLength - 1
+          ? this.randomIndexArr[i] - iconsLength
           : this.randomIndexArr[i];
 
-      return this.icons[indexInIcons];
+      return this.getIcons[indexInIcons];
     },
   },
 };
 </script>
 
 <style scoped lang="less">
-.game {
-  &__field {
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    box-shadow: 0 0 20px 0 #e4d4f4;
-    height: 600px;
-    width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 20px;
+.game-field {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 0 20px 0 #e4d4f4;
+  max-width: 55vw;
+  max-width: clamp(320px, 55vw, 600px);
+  padding: 20px;
 
+  &__cards {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 5px;
+    gap: 2vmin;
     align-items: center;
     justify-items: center;
   }
 
   &__card {
     color: rebeccapurple;
-    font-size: 36px;
-  }
-
-  &__progress-section {
-    margin-top: 20px;
-  }
-
-  &__progress {
-    margin-left: auto;
-    margin-right: auto;
+    font-size: 2.5rem;
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
   }
 }
 </style>

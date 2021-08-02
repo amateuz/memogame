@@ -11,9 +11,9 @@
     <div
       class="card"
       :class="[
-        clicked ? 'card_clicked' : null,
-        backVisible ? 'card_back-visible' : null,
-        frontVisible ? 'card_front-visible' : null,
+        { card_clicked: clicked },
+        { 'card_back-visible': backVisible },
+        { 'card_front-visible': frontVisible },
       ]"
       @click="click()"
       :key="cardState"
@@ -50,6 +50,8 @@ export default {
       this.clicked = !this.clicked;
       if (this.clicked) this.cardState = "clicked";
       else this.cardState = "initial";
+
+      this.$emit("click", this.icon);
     },
   },
 };
@@ -66,9 +68,9 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 10px;
-  height: 60px;
+  height: 4vw;
   position: relative;
-  width: 60px;
+  width: 4vw;
   transform-origin: center center;
   will-change: transform;
 
