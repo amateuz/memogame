@@ -5,19 +5,27 @@
         class="game-field__card"
         v-for="i in cardsQty"
         :key="i"
-        :icon="getNextIconName(i - 1)"
+        :id="pairedCards[i - 1].id"
+        :icon="pairedCards[i - 1].icon"
+        :opened="pairedCards[i - 1].opened"
+        :visible="pairedCards[i - 1].visible"
         @click="cardClicked($event)"
       />
     </section>
-    <slot />
+    <Progress
+      class="game-field__progress"
+      :percents="Math.floor(this.turnTimeLeft * 20)"
+    />
   </section>
 </template>
 
 <script>
 import Card from "@/components/Card";
+import Progress from "@/components/Progress";
 export default {
   components: {
     Card,
+    Progress,
   },
   name: "Field",
   props: {
@@ -32,10 +40,7 @@ export default {
   },
   data() {
     return {
-      clickedCard: "",
-      randomIndexArr: Array.apply(null, Array(this.cardsQty))
-        .map((e, i) => i)
-        .sort(() => Math.random() - 0.5),
+      firstCardId: -1,
       icons: [
         "air-freshener",
         "anchor",
@@ -56,31 +61,77 @@ export default {
         "tram",
         "tree",
       ],
+      randomIndexArr: Array.apply(null, Array(this.cardsQty))
+        .map((e, i) => i)
+        .sort(() => Math.random() - 0.5),
+      pairedCards: [],
+      turnTime: 5,
+      turnTimeLeft: 5,
     };
   },
   computed: {
     getIcons() {
-      let iconsQty = this.cardsQty / 2;
-      return this.icons.length !== iconsQty
-        ? this.icons.slice(0, iconsQty)
+      let uniqueCardsQty = this.cardsQty / 2;
+      return this.icons.length !== uniqueCardsQty
+        ? this.icons.slice(0, uniqueCardsQty)
         : this.icons;
     },
   },
   methods: {
-    cardClicked(cardName) {
-      if (this.clickedCard === "") {
-        this.clickedCard = cardName;
+    cardClicked(card) {
+      if (card.id === this.firstCardId) return;
+
+      let clickedCard = this.pairedCards.find((c) => c.id === card.id);
+
+      if (clickedCard !== undefined) {
+        clickedCard.opened = !clickedCard.opened;
+
+        if (this.firstCardId >= 0) {
+          let firstCard = this.pairedCards.find(
+            (c) => c.id === this.firstCardId
+          );
+
+          if (firstCard !== undefined) {
+            if (clickedCard.icon === firstCard.icon) {
+              clickedCard.visible = false;
+              firstCard.visible = false;
+            } else {
+              clickedCard.opened = false;
+              firstCard.opened = false;
+            }
+          }
+          this.firstCardId = -1;
+        } else {
+          this.firstCardId = clickedCard.id;
+          let pace = (this.turnTime / 100).toFixed(2);
+          let interval = setInterval(() => {
+            this.turnTimeLeft = (this.turnTimeLeft - pace).toFixed(2);
+            if (this.turnTimeLeft <= 0) {
+              clearInterval(interval);
+            }
+          }, pace * 1000);
+        }
       }
     },
-    getNextIconName(i) {
-      let iconsLength = this.getIcons.length;
+    getNextPairedCardIcon(cardIndex) {
+      let cardsLength = this.getIcons.length;
       let indexInIcons =
-        this.randomIndexArr[i] > iconsLength - 1
-          ? this.randomIndexArr[i] - iconsLength
-          : this.randomIndexArr[i];
+        this.randomIndexArr[cardIndex] > cardsLength - 1
+          ? this.randomIndexArr[cardIndex] - cardsLength
+          : this.randomIndexArr[cardIndex];
 
       return this.getIcons[indexInIcons];
     },
+  },
+  created() {
+    for (let i = 0; i < this.cardsQty; i++) {
+      this.pairedCards.push({
+        id: i,
+        icon: this.getNextPairedCardIcon(i),
+        opened: false,
+        visible: true,
+      });
+    }
   },
 };
 </script>
@@ -106,6 +157,12 @@ export default {
     color: rebeccapurple;
     font-size: 2.5rem;
     font-size: clamp(1.5rem, 5vw, 2.5rem);
+  }
+
+  &__progress {
+    margin-top: 30px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 </style>

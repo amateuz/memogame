@@ -4,7 +4,7 @@
       {{ btnText }}
     </button>
     <div class="timer__counter">
-      {{ getFormattedTime(minutes) }}:{{ getFormattedTime(seconds) }}
+      {{ getFormattedTime(elapsedSeconds) }}
     </div>
   </section>
 </template>
@@ -15,14 +15,20 @@ export default {
   data() {
     return {
       btnText: "Start",
-      minutes: 0,
-      seconds: 0,
+      elapsedSeconds: 0,
       interval: null,
     };
   },
   methods: {
-    getFormattedTime(time) {
-      return time < 10 ? "0" + time : "" + time;
+    formatToDoubleDigits(number) {
+      if (number > 9) return "" + number;
+      return "0" + number;
+    },
+    getFormattedTime(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      return `${this.formatToDoubleDigits(minutes)}:${this.formatToDoubleDigits(
+        seconds % 60
+      )}`;
     },
     resetTimer() {
       this.stopTimer();
@@ -39,17 +45,11 @@ export default {
       }
     },
     startTimer() {
+      const startTime = Date.now();
       this.interval = setInterval(() => {
-        if (this.seconds < 59) {
-          ++this.seconds;
-        } else if (this.minutes < 99) {
-          this.seconds = 0;
-          ++this.minutes;
-        } else {
-          this.stopTimer();
-          this.btnText = "Start";
-        }
-      }, 1000);
+        const delta = Math.floor((Date.now() - startTime) / 1000);
+        this.elapsedSeconds = delta;
+      }, 980);
       this.$emit("start");
     },
     stopTimer() {

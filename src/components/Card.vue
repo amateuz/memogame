@@ -1,9 +1,9 @@
 <template>
   <transition
     name="flip"
-    @after-enter="clicked ? (frontVisible = true) : (frontVisible = false)"
+    @after-enter="opened ? (frontVisible = true) : (frontVisible = false)"
     @before-leave="
-      clicked ? (backVisible = false) : (backVisible = true);
+      opened ? (backVisible = false) : (backVisible = true);
       frontVisible = false;
     "
     mode="out-in"
@@ -11,12 +11,13 @@
     <div
       class="card"
       :class="[
-        { card_clicked: clicked },
+        { card_opened: opened },
         { 'card_back-visible': backVisible },
         { 'card_front-visible': frontVisible },
+        { card_found: !visible },
       ]"
       @click="click()"
-      :key="cardState"
+      :key="opened"
     >
       <span class="card__front">
         <fa-icon :icon="icon" />
@@ -32,26 +33,39 @@
 export default {
   name: "Card",
   props: {
+    id: {
+      type: Number,
+      required: true,
+    },
     icon: {
       type: String,
       required: true,
     },
+    opened: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    visible: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
   },
   data() {
     return {
-      cardState: "initial",
-      clicked: false,
-      backVisible: true,
-      frontVisible: false,
+      backVisible: !this.opened,
+      frontVisible: this.opened,
     };
   },
   methods: {
     click() {
-      this.clicked = !this.clicked;
-      if (this.clicked) this.cardState = "clicked";
-      else this.cardState = "initial";
-
-      this.$emit("click", this.icon);
+      this.$emit("click", {
+        id: this.id,
+        icon: this.icon,
+        opened: this.opened,
+        visible: this.visible,
+      });
     },
   },
 };
@@ -77,12 +91,12 @@ export default {
   &:hover {
     cursor: pointer;
 
-    &:not(@{r}_clicked) {
+    &:not(@{r}_opened) {
       background-color: lighten(#e4d4f4, 6);
     }
   }
 
-  &:active:not(@{r}_clicked) {
+  &:active:not(@{r}_opened) {
     background-color: #e4d4f4;
   }
 
@@ -99,8 +113,16 @@ export default {
     transform: rotateY(-180deg);
   }
 
-  &_clicked {
-    box-shadow: -4px 4px 6px 1px rgba(0, 0, 255, 0.2);
+  &_back-visible {
+    @{r}__back {
+      opacity: 1;
+    }
+  }
+
+  &_found {
+    opacity: 0;
+    pointer-events: none;
+    touch-action: none;
   }
 
   &_front-visible {
@@ -110,10 +132,8 @@ export default {
     }
   }
 
-  &_back-visible {
-    @{r}__back {
-      opacity: 1;
-    }
+  &_opened {
+    box-shadow: -4px 4px 6px 1px rgba(0, 0, 255, 0.2);
   }
 }
 

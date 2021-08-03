@@ -3,11 +3,7 @@
     <h1>Memo Game</h1>
     <section class="game" :class="{ game_stopped: !this.getGameStarted }">
       <section class="game__meta">
-        <Timer
-          class="game__timer"
-          @start="startGame"
-          @stop="stopGame"
-        />
+        <Timer class="game__timer" @start="startGame" @stop="stopGame" />
       </section>
       <Field
         class="game__field"
@@ -16,9 +12,7 @@
             ? showPopover($event, 'Please press Start to start the game!')
             : null
         "
-      >
-        <Progress class="game__progress" />
-      </Field>
+      />
       <section class="game__info">
         <Popover
           class="game__popover"
@@ -32,7 +26,6 @@
 
 <script>
 import Field from "@/components/Field";
-import Progress from "@/components/Progress";
 import Popover from "@/components/Popover";
 import Timer from "@/components/Timer";
 import { mapGetters, mapActions } from "vuex";
@@ -41,7 +34,6 @@ export default {
   name: "App",
   components: {
     Field,
-    Progress,
     Popover,
     Timer,
   },
@@ -119,12 +111,6 @@ body {
     margin-left: auto;
     margin-right: auto;
     margin-top: 20px;
-  }
-
-  &__progress {
-    margin-top: 30px;
-    margin-left: auto;
-    margin-right: auto;
   }
 }
 
