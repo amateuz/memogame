@@ -23,12 +23,11 @@ export default {
   background-color: chartreuse;
   border-radius: 6px;
   height: 5px;
-  float: right;
   max-width: 600px;
   position: relative;
   width: 100%;
   transform-origin: center right;
   transform: scaleX(1);
-  transition: transform 0.3s ease;
+  transition: transform 0.15s linear;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <section class="popover" :class="hidden ? 'popover_hidden' : null">
+  <section class="popover" :class="{ 'popover_hidden' : !visible }">
     {{ text }}
   </section>
 </template>
@@ -8,14 +8,14 @@
 export default {
   name: "Popover",
   props: {
-    hidden: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
     text: {
       type: String,
       required: true,
+    },
+    visible: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
 };
@@ -28,14 +28,15 @@ export default {
   color: #fff;
   font-size: 1rem;
   padding: 20px;
-  opacity: 0.92;
+  opacity: 0.96;
   height: auto;
   width: 100%;
+  position: relative;
   max-width: 250px;
   transform-origin: center center;
   transition: all 0.3s ease;
   transform: scale(1);
-  z-index: 99;
+  z-index: 9;
 
   &_hidden {
     transform: scale(0);

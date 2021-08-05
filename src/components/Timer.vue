@@ -1,8 +1,8 @@
 <template>
-  <section class="timer">
-    <button class="timer__btn" @click.prevent="startOrResetTimer">
+  <section class="timer" :class="{ timer_disabled: disabled }">
+    <Btn class="timer__btn" @click="startOrResetTimer">
       {{ btnText }}
-    </button>
+    </Btn>
     <div class="timer__counter">
       {{ getFormattedTime(elapsedSeconds) }}
     </div>
@@ -10,12 +10,21 @@
 </template>
 
 <script>
+import Btn from "@/components/Btn";
+import { mapGetters } from "vuex";
 export default {
   name: "Timer",
+  components: {
+    Btn,
+  },
+  computed: {
+    ...mapGetters(["getGameFinished", "getGameStarted"]),
+  },
   data() {
     return {
       btnText: "Start",
       elapsedSeconds: 0,
+      disabled: false,
       interval: null,
     };
   },
@@ -32,9 +41,9 @@ export default {
     },
     resetTimer() {
       this.stopTimer();
-      this.minutes = 0;
-      this.seconds = 0;
+      this.elapsedSeconds = 0;
       this.btnText = "Start";
+      this.$emit("reset");
     },
     startOrResetTimer() {
       if (this.interval === null) {
@@ -47,15 +56,30 @@ export default {
     startTimer() {
       const startTime = Date.now();
       this.interval = setInterval(() => {
-        const delta = Math.floor((Date.now() - startTime) / 1000);
-        this.elapsedSeconds = delta;
+        this.elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
       }, 980);
       this.$emit("start");
     },
     stopTimer() {
       clearInterval(this.interval);
       this.interval = null;
-      this.$emit("stop");
+      this.$emit("stop", this.elapsedSeconds);
+    },
+  },
+  watch: {
+    getGameStarted(newState) {
+      if (!newState) {
+        this.btnText = "Start";
+        this.elapsedSeconds = 0;
+      }
+    },
+    getGameFinished(newState) {
+      if (newState) {
+        this.stopTimer();
+        this.disabled = true;
+      } else {
+        this.disabled = false;
+      }
     },
   },
 };
@@ -63,35 +87,19 @@ export default {
 
 <style scoped lang="less">
 .timer {
-  &__btn {
-    background-color: rebeccapurple;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 1.25rem;
-    font-weight: 700;
-    letter-spacing: 0.15rem;
-    margin-right: 10px;
-    margin-left: 10px;
-    outline: none;
-    height: 40px;
-    width: 200px;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background-color: lighten(rebeccapurple, 15);
-      cursor: pointer;
-    }
-
-    &:active {
-      background-color: lighten(rebeccapurple, 20);
-      transform: translate(2px, 1px);
+  @r: .timer;
+  &_disabled {
+    @{r}__btn {
+      background-color: #555;
+      pointer-events: none;
+      touch-action: none;
     }
   }
+
   &__counter {
     font-size: 2rem;
     font-weight: 700;
-    margin-top: 20px;
+    margin-top: 15px;
   }
 }
 </style>

@@ -14,7 +14,7 @@
         { card_opened: opened },
         { 'card_back-visible': backVisible },
         { 'card_front-visible': frontVisible },
-        { card_found: !visible },
+        { card_visible: !visible },
       ]"
       @click="click()"
       :key="opened"
@@ -82,9 +82,9 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 10px;
-  height: 4vw;
+  height:~"min(6vh, 4vw)";
+  width: ~"min(6vh, 4vw)";
   position: relative;
-  width: 4vw;
   transform-origin: center center;
   will-change: transform;
 
@@ -119,10 +119,11 @@ export default {
     }
   }
 
-  &_found {
+  &_visible {
     opacity: 0;
     pointer-events: none;
     touch-action: none;
+    transition: all 0.3s ease;
   }
 
   &_front-visible {

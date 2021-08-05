@@ -12,20 +12,16 @@
         @click="cardClicked($event)"
       />
     </section>
-    <Progress
-      class="game-field__progress"
-      :percents="Math.floor(this.turnTimeLeft * 20)"
-    />
+    <slot />
   </section>
 </template>
 
 <script>
 import Card from "@/components/Card";
-import Progress from "@/components/Progress";
+import { mapGetters } from "vuex";
 export default {
   components: {
     Card,
-    Progress,
   },
   name: "Field",
   props: {
@@ -61,15 +57,12 @@ export default {
         "tram",
         "tree",
       ],
-      randomIndexArr: Array.apply(null, Array(this.cardsQty))
-        .map((e, i) => i)
-        .sort(() => Math.random() - 0.5),
       pairedCards: [],
-      turnTime: 5,
-      turnTimeLeft: 5,
+      randomIndexArr: [],
     };
   },
   computed: {
+    ...mapGetters(["getGameStarted", "getTurnTimeIsUp"]),
     getIcons() {
       let uniqueCardsQty = this.cardsQty / 2;
       return this.icons.length !== uniqueCardsQty
@@ -87,62 +80,91 @@ export default {
         clickedCard.opened = !clickedCard.opened;
 
         if (this.firstCardId >= 0) {
+          this.$emit("secondCardClicked");
           let firstCard = this.pairedCards.find(
             (c) => c.id === this.firstCardId
           );
 
           if (firstCard !== undefined) {
-            if (clickedCard.icon === firstCard.icon) {
-              clickedCard.visible = false;
-              firstCard.visible = false;
-            } else {
-              clickedCard.opened = false;
-              firstCard.opened = false;
-            }
+            setTimeout(() => {
+              if (clickedCard.icon === firstCard.icon) {
+                clickedCard.visible = false;
+                firstCard.visible = false;
+              } else {
+                clickedCard.opened = false;
+                firstCard.opened = false;
+              }
+              this.firstCardId = -1;
+              this.$emit("turnEnd", this.checkGameFinished());
+            }, 1000);
           }
-          this.firstCardId = -1;
         } else {
           this.firstCardId = clickedCard.id;
-          let pace = (this.turnTime / 100).toFixed(2);
-          let interval = setInterval(() => {
-            this.turnTimeLeft = (this.turnTimeLeft - pace).toFixed(2);
-            if (this.turnTimeLeft <= 0) {
-              clearInterval(interval);
-            }
-          }, pace * 1000);
+          this.$emit("turnStart");
         }
       }
     },
+    createNewField() {
+      this.pairedCards = [];
+      this.randomIndexArr = this.getRandomIndexArr();
+      for (let i = 0; i < this.cardsQty; i++) {
+        this.pairedCards.push({
+          id: i,
+          icon: this.getNextPairedCardIcon(i),
+          opened: false,
+          visible: true,
+        });
+      }
+    },
+    checkGameFinished() {
+      return this.pairedCards.find(c => c.visible) === undefined
+    },
     getNextPairedCardIcon(cardIndex) {
-      let cardsLength = this.getIcons.length;
-      let indexInIcons =
+      const cardsLength = this.getIcons.length;
+      const indexInIcons =
         this.randomIndexArr[cardIndex] > cardsLength - 1
           ? this.randomIndexArr[cardIndex] - cardsLength
           : this.randomIndexArr[cardIndex];
 
       return this.getIcons[indexInIcons];
     },
+    getRandomIndexArr() {
+      return Array.apply(null, Array(this.cardsQty))
+        .map((e, i) => i)
+        .sort(() => Math.random() - 0.5);
+    },
   },
   created() {
-    for (let i = 0; i < this.cardsQty; i++) {
-      this.pairedCards.push({
-        id: i,
-        icon: this.getNextPairedCardIcon(i),
-        opened: false,
-        visible: true,
-      });
-    }
+    this.createNewField();
+  },
+  watch: {
+    getGameStarted(newState) {
+      if (!newState) {
+        this.createNewField();
+      }
+    },
+    getTurnTimeIsUp(newState) {
+      if (newState) {
+        this.firstCardId = -1;
+        this.pairedCards
+          .filter((c) => c.opened)
+          .forEach((c) => (c.opened = false));
+      }
+    },
   },
 };
 </script>
 
 <style scoped lang="less">
 .game-field {
+  background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 6px;
+  box-sizing: border-box;
   box-shadow: 0 0 20px 0 #e4d4f4;
+  min-width: 320px;
   max-width: 55vw;
-  max-width: clamp(320px, 55vw, 600px);
+  max-width: clamp(320px, 75vw, 100%);
   padding: 20px;
 
   &__cards {
@@ -157,6 +179,18 @@ export default {
     color: rebeccapurple;
     font-size: 2.5rem;
     font-size: clamp(1.5rem, 5vw, 2.5rem);
+  }
+
+  &__dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+
+    &.dialog_hidden {
+      transform: scale(0) translate(-50%, -50%);
+    }
   }
 
   &__progress {
