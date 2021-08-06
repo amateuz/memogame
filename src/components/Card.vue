@@ -14,7 +14,7 @@
         { card_opened: opened },
         { 'card_back-visible': backVisible },
         { 'card_front-visible': frontVisible },
-        { card_visible: !visible },
+        { card_hidden: !visible },
       ]"
       @click="click()"
       :key="opened"
@@ -119,7 +119,7 @@ export default {
     }
   }
 
-  &_visible {
+  &_hidden {
     opacity: 0;
     pointer-events: none;
     touch-action: none;
